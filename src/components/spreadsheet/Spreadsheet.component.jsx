@@ -19,7 +19,7 @@ const Spreadsheet = ({ rows, columns }) => {
   const [selectedRange, setSelectedRange] = useState(null);
   const [selectedText, setSelectedText] = useState('');
   const [history, setHistory] = useState([]); // Stores the grid states for undo functionality
-  const maxHistorySize = 5; // Max number of actions we can undo
+  const maxHistorySize = 10; // Max number of actions we can undo
 
   // Save grid state to history
   const saveToHistory = () => {
@@ -36,20 +36,25 @@ const Spreadsheet = ({ rows, columns }) => {
   };
 
   // Undo the last action
-  const undo = () => {
+// Undo the last action
+const undo = () => {
     setHistory(prevHistory => {
-      if (prevHistory.length === 0) return prevHistory; // No history to undo
-      
+      if (prevHistory.length === 0) {
+        console.log('Out of Zs'); // Log when out of history
+        return prevHistory; // No history to undo
+      }
+  
       const newHistory = [...prevHistory];
       newHistory.pop(); // Remove the most recent history entry
   
       const lastState = newHistory[newHistory.length - 1] || createInitialGrid(); // Get the second most recent state or initial grid
   
       setGrid(lastState); // Set the grid to the second most recent state
-      
+  
       return newHistory; // Return the modified history without the last state
     });
   };
+  
 
   // Get the cell label like A1, B1, etc.
   const getCellLabel = (row, col) => {
@@ -150,6 +155,7 @@ const Spreadsheet = ({ rows, columns }) => {
       setGrid(newGrid);
     }
   };
+  
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
