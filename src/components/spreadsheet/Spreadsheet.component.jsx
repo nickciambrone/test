@@ -17,7 +17,7 @@ const Spreadsheet = ({ rows, columns }) => {
   // Initialize the grid state
   const createInitialGrid = () => {
     const grid = new Array(rows).fill(null).map(() => new Array(columns).fill(''));
-    
+
     // Fill accounting fields in column A (row 1 to 10)
     for (let i = 0; i < accountingFields.length; i++) {
       grid[i][0] = accountingFields[i]; // First column (A)
@@ -27,7 +27,7 @@ const Spreadsheet = ({ rows, columns }) => {
     for (let i = 0; i < headers.length; i++) {
       grid[10][i] = headers[i]; // Row 11
     }
-    
+
     return grid;
   };
 
@@ -72,7 +72,10 @@ const Spreadsheet = ({ rows, columns }) => {
 
   // Handle double-click to enter editing mode
   const handleCellDoubleClick = (row, col) => {
-    setEditingCell({ row, col });
+    // Only allow editing if it's not an accounting field or header with value
+    if (row >= 10 || (row === 10 && col > 0) || (row < 10 && grid[row][col] === '')) {
+      setEditingCell({ row, col });
+    }
   };
 
   // Handle cell input change
@@ -171,27 +174,32 @@ const Spreadsheet = ({ rows, columns }) => {
   const renderGrid = () => {
     return grid.map((rowData, row) => (
       <tr key={row}>
-        {rowData.map((cellData, col) => (
-          <td
-            key={`${row}-${col}`}
-            className={`cell ${isSelected(row, col) ? 'selected' : ''}`}
-            onClick={(e) => handleCellClick(row, col, e)}
-            onDoubleClick={() => handleCellDoubleClick(row, col)}
-          >
-            {editingCell?.row === row && editingCell?.col === col ? (
-              <input
-                type="text"
-                value={cellData}
-                onChange={(e) => handleChange(e, row, col)}
-                onBlur={handleInputBlur} // Save state on blur
-                autoFocus
-                readOnly={row < 10 || (row === 10 && col < headers.length)} // Make cells in the first column (A) uneditable
-              />
-            ) : (
-              cellData
-            )}
-          </td>
-        ))}
+        {rowData.map((cellData, col) => {
+          const isHeaderOrAccountingField = (row < 10 && accountingFields.includes(cellData)) || (row === 10 && col < headers.length);
+          const isEditable = !(isHeaderOrAccountingField && cellData !== '');
+          
+          return (
+            <td
+              key={`${row}-${col}`}
+              className={`cell ${isSelected(row, col) ? 'selected' : ''} ${isHeaderOrAccountingField && cellData !== '' ? 'non-editable' : ''}`}
+              onClick={(e) => handleCellClick(row, col, e)}
+              onDoubleClick={() => handleCellDoubleClick(row, col)}
+            >
+              {editingCell?.row === row && editingCell?.col === col ? (
+                <input
+                  type="text"
+                  value={cellData}
+                  onChange={(e) => handleChange(e, row, col)}
+                  onBlur={handleInputBlur} // Save state on blur
+                  autoFocus
+                  readOnly={!isEditable} // Make cells non-editable if they contain values in the first 10 rows
+                />
+              ) : (
+                cellData
+              )}
+            </td>
+          );
+        })}
       </tr>
     ));
   };
@@ -228,12 +236,15 @@ const Spreadsheet = ({ rows, columns }) => {
           background-color: lightgray;
         }
 
+        .excel-like-grid td.non-editable {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
+        }
+
         .excel-like-grid input {
-          width: 98%;
+          width: 100%;
           height: 100%;
           box-sizing: border-box;
-          border: none;
-          padding: 0;
         }
       `}</style>
     </div>
