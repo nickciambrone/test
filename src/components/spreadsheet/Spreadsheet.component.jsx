@@ -122,6 +122,7 @@ const Spreadsheet = ({ rows, columns }) => {
       // Handle copy (Ctrl+C)
       if (selectedCell) {
         const cellData = grid[selectedCell.row][selectedCell.col];
+        navigator.clipboard.writeText(cellData);
         setCopiedContent(cellData);
       }
     } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
