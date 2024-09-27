@@ -194,6 +194,20 @@ const handlePaste = async (e) => {
       handlePaste(e);
     } else if (e.key === 'Enter') {
       setEditingCell(null);
+    }else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault(); // Prevent default scrolling behavior
+        if (selectedCell) {
+            let newRow = selectedCell.row;
+            let newCol = selectedCell.col;
+
+            if (e.key === 'ArrowUp' && newRow > 0) newRow--;
+            if (e.key === 'ArrowDown' && newRow < rows - 1) newRow++;
+            if (e.key === 'ArrowLeft' && newCol > 0) newCol--;
+            if (e.key === 'ArrowRight' && newCol < columns - 1) newCol++;
+
+            setSelectedCell({ row: newRow, col: newCol });
+            setSelectedText(getCellLabel(newRow, newCol));
+        }
     }
   };
 
