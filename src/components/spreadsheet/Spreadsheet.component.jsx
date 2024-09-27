@@ -69,8 +69,41 @@ const Spreadsheet = ({ rows, columns }) => {
     setEditingCell(null);
   };
 
-// Handle KeyDown for Copy (Ctrl+C) and Paste (Ctrl+V)
-const handleKeyDown = (e) => {
+  // Handle paste event
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const rowsData = pastedData.split('\n').map(row => row.split('\t'));
+
+    const newGrid = [...grid];
+    rowsData.forEach((rowData, i) => {
+      rowData.forEach((cellData, j) => {
+        if (selectedCell) {
+          const targetRow = selectedCell.row + i;
+          const targetCol = selectedCell.col + j;
+          if (targetRow < rows && targetCol < columns) {
+            newGrid[targetRow][targetCol] = cellData;
+          }
+        }
+      });
+    });
+    setGrid(newGrid);
+    console.log(newGrid); // Log the grid state
+  };
+
+  // Check if the cell is part of the selected range
+  const isSelected = (row, col) => {
+    if (!selectedRange) return selectedCell && selectedCell.row === row && selectedCell.col === col;
+    const { start, end } = selectedRange;
+    const rowMin = Math.min(start.row, end.row);
+    const rowMax = Math.max(start.row, end.row);
+    const colMin = Math.min(start.col, end.col);
+    const colMax = Math.max(start.col, end.col);
+    return row >= rowMin && row <= rowMax && col >= colMin && col <= colMax;
+  };
+
+  // Handle Delete key to clear selected cells
+  const handleKeyDown = (e) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
       const newGrid = [...grid];
       if (selectedRange) {
@@ -90,55 +123,17 @@ const handleKeyDown = (e) => {
       if (selectedCell) {
         const cellData = grid[selectedCell.row][selectedCell.col];
         setCopiedContent(cellData);
-        e.preventDefault(); // Prevent copying to system clipboard
       }
     } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       // Handle paste (Ctrl+V)
-      if (selectedCell && copiedContent !== '') {
+      if (selectedCell) {
         const newGrid = [...grid];
         newGrid[selectedCell.row][selectedCell.col] = copiedContent;
         setGrid(newGrid);
         console.log(newGrid); // Log the grid state
-        e.preventDefault(); // Prevent pasting from system clipboard
       }
     }
   };
-  
-  // Handle paste event for multi-cell paste from external sources
-  const handlePaste = (e) => {
-    e.preventDefault(); // Prevent default paste behavior
-    const pastedData = e.clipboardData.getData('text');
-    const rowsData = pastedData.split('\n').map(row => row.split('\t'));
-  
-    const newGrid = [...grid];
-    rowsData.forEach((rowData, i) => {
-      rowData.forEach((cellData, j) => {
-        if (selectedCell) {
-          const targetRow = selectedCell.row + i;
-          const targetCol = selectedCell.col + j;
-          if (targetRow < rows && targetCol < columns) {
-            newGrid[targetRow][targetCol] = cellData;
-          }
-        }
-      });
-    });
-    setGrid(newGrid);
-    console.log(newGrid); // Log the grid state
-  };
-  
-
-  // Check if the cell is part of the selected range
-  const isSelected = (row, col) => {
-    if (!selectedRange) return selectedCell && selectedCell.row === row && selectedCell.col === col;
-    const { start, end } = selectedRange;
-    const rowMin = Math.min(start.row, end.row);
-    const rowMax = Math.max(start.row, end.row);
-    const colMin = Math.min(start.col, end.col);
-    const colMax = Math.max(start.col, end.col);
-    return row >= rowMin && row <= rowMax && col >= colMin && col <= colMax;
-  };
-
-
 
   // Save grid to local storage whenever it changes
   useEffect(() => {
