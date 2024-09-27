@@ -73,7 +73,7 @@ const Spreadsheet = ({ rows, columns }) => {
   // Handle double-click to enter editing mode
   const handleCellDoubleClick = (row, col) => {
     // Only allow editing if it's not an accounting field or header with value
-    if (row >= 10 || (row === 10 && col > 0) || (row < 10 && grid[row][col] === '')) {
+    if (row >= 10 || (row === 10 && col > 0) || (row < 10 && col>0)) {
       setEditingCell({ row, col });
     }
   };
@@ -83,7 +83,6 @@ const Spreadsheet = ({ rows, columns }) => {
     const newGrid = [...grid];
     newGrid[row][col] = e.target.value;
     setGrid(newGrid);
-    console.log(newGrid); // Log the grid state
   };
 
   // Handle input blur to save the state after editing
@@ -110,7 +109,6 @@ const Spreadsheet = ({ rows, columns }) => {
       });
     });
     setGrid(newGrid);
-    console.log(newGrid); // Log the grid state
   };
 
   // Check if the cell is part of the selected range
@@ -139,7 +137,6 @@ const Spreadsheet = ({ rows, columns }) => {
         newGrid[selectedCell.row][selectedCell.col] = '';
       }
       setGrid(newGrid);
-      console.log(newGrid); // Log the grid state
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       // Handle copy (Ctrl+C)
       if (selectedCell) {
