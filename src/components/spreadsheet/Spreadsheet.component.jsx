@@ -125,6 +125,7 @@ const Spreadsheet = ({ rows, columns }) => {
 
   // Handle Delete key to clear selected cells
 // Handle key down events
+// Handle key down events
 const handleKeyDown = (e) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
       const newGrid = [...grid];
@@ -132,11 +133,20 @@ const handleKeyDown = (e) => {
         const { start, end } = selectedRange;
         for (let row = Math.min(start.row, end.row); row <= Math.max(start.row, end.row); row++) {
           for (let col = Math.min(start.col, end.col); col <= Math.max(start.col, end.col); col++) {
-            newGrid[row][col] = '';
+            // Check if the cell is editable (not a header or accounting field)
+            const isHeaderOrAccountingField = (row < 10 && accountingFields.includes(newGrid[row][col])) || (row === 10 && col < headers.length);
+            if (!isHeaderOrAccountingField) {
+              newGrid[row][col] = '';
+            }
           }
         }
       } else if (selectedCell) {
-        newGrid[selectedCell.row][selectedCell.col] = '';
+        const { row, col } = selectedCell;
+        // Check if the cell is editable
+        const isHeaderOrAccountingField = (row < 10 && accountingFields.includes(newGrid[row][col])) || (row === 10 && col < headers.length);
+        if (!isHeaderOrAccountingField) {
+          newGrid[row][col] = '';
+        }
       }
       setGrid(newGrid);
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
@@ -158,6 +168,7 @@ const handleKeyDown = (e) => {
       setEditingCell(null); // Unselect the cell
     }
   };
+  
   
 
   // Save grid to local storage whenever it changes
