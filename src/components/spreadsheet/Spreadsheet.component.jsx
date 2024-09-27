@@ -118,12 +118,13 @@ const Spreadsheet = ({ rows, columns, initialValues = [] }) => {
   };
   
   // Handle paste event
-  const handlePaste = async (e) => {
+ // Handle paste event
+const handlePaste = async (e) => {
     e.preventDefault();
   
     try {
       const text = await navigator.clipboard.readText();
-      
+  
       if (!text) {
         console.error("No data to paste from clipboard.");
         return;
@@ -131,24 +132,28 @@ const Spreadsheet = ({ rows, columns, initialValues = [] }) => {
   
       const rowsData = text.split('\n').map(row => row.split('\t'));
       const newGrid = [...grid];
-      
+  
       rowsData.forEach((rowData, i) => {
         rowData.forEach((cellData, j) => {
           if (selectedCell) {
             const targetRow = selectedCell.row + i;
             const targetCol = selectedCell.col + j;
-            if (targetRow < rows && targetCol < columns) {
+            const isHeaderOrAccountingField = (targetRow < 10 && accountingFields.includes(newGrid[targetRow][targetCol])) || (targetRow === 10 && targetCol < headers.length);
+  
+            // Only update if the target cell is not a header or accounting field
+            if (targetRow < rows && targetCol < columns && !isHeaderOrAccountingField) {
               newGrid[targetRow][targetCol] = cellData;
             }
           }
         });
       });
-      
+  
       setGrid(newGrid);
     } catch (error) {
       console.error("Failed to read clipboard data: ", error);
     }
   };
+  
   
   // Check if the cell is part of the selected range
   const isSelected = (row, col) => {
