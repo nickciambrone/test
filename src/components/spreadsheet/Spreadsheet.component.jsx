@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Spreadsheet = ({ rows, columns }) => {
+const Spreadsheet = ({ rows, columns, initialValues = [] }) => {
   const headers = ['ENT', 'ACCT', 'SUBAC', 'TT', 'PDGRP', 'CENTER', 'CP', 'LOC', 'FUTURE', 'DEBIT', 'CREDIT', 'Line Description', 'Line DFF Context', 'Line DFF', 'Captured Info Context', 'Captured Info DFF'];
   const accountingFields = [
     'Ledger',
@@ -26,6 +26,15 @@ const Spreadsheet = ({ rows, columns }) => {
     // Fill header row 11
     for (let i = 0; i < headers.length; i++) {
       grid[10][i] = headers[i]; // Row 11
+    }
+
+    // If initial values are provided, fill the grid with them
+    if (initialValues.length > 0) {
+      for (let i = 0; i < initialValues.length && i < rows; i++) {
+        for (let j = 0; j < initialValues[i].length && j < columns; j++) {
+          grid[i][j] = initialValues[i][j];
+        }
+      }
     }
 
     return grid;
@@ -73,7 +82,7 @@ const Spreadsheet = ({ rows, columns }) => {
   // Handle double-click to enter editing mode
   const handleCellDoubleClick = (row, col) => {
     // Only allow editing if it's not an accounting field or header with value
-    if (row >= 10 || (row === 10 && col >= 15) || (row < 10 && col>0)) {
+    if (row >= 10 || (row === 10 && col >= 15) || (row < 10 && col > 0)) {
       setEditingCell({ row, col });
     }
   };
@@ -90,9 +99,8 @@ const Spreadsheet = ({ rows, columns }) => {
     setEditingCell(null);
   };
 
-  // Handle paste event
-// Handle copy event
-const handleCopy = () => {
+  // Handle copy event
+  const handleCopy = () => {
     if (selectedRange) {
       const { start, end } = selectedRange;
       const copiedRange = [];
@@ -110,12 +118,10 @@ const handleCopy = () => {
   };
   
   // Handle paste event
- // Handle paste event
- const handlePaste = async (e) => {
+  const handlePaste = async (e) => {
     e.preventDefault();
   
     try {
-      // Use the Clipboard API to read the clipboard data
       const text = await navigator.clipboard.readText();
       
       if (!text) {
@@ -144,9 +150,6 @@ const handleCopy = () => {
     }
   };
   
-  
-  
-
   // Check if the cell is part of the selected range
   const isSelected = (row, col) => {
     if (!selectedRange) return selectedCell && selectedCell.row === row && selectedCell.col === col;
@@ -158,18 +161,14 @@ const handleCopy = () => {
     return row >= rowMin && row <= rowMax && col >= colMin && col <= colMax;
   };
 
-  // Handle Delete key to clear selected cells
-// Handle key down events
-// Handle key down events
-const handleKeyDown = (e) => {
+  // Handle key down events
+  const handleKeyDown = (e) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      // ... existing delete logic
       const newGrid = [...grid];
       if (selectedRange) {
         const { start, end } = selectedRange;
         for (let row = Math.min(start.row, end.row); row <= Math.max(start.row, end.row); row++) {
           for (let col = Math.min(start.col, end.col); col <= Math.max(start.col, end.col); col++) {
-            // Check if the cell is editable (not a header or accounting field)
             const isHeaderOrAccountingField = (row < 10 && accountingFields.includes(newGrid[row][col])) || (row === 10 && col < headers.length);
             if (!isHeaderOrAccountingField) {
               newGrid[row][col] = '';
@@ -178,7 +177,6 @@ const handleKeyDown = (e) => {
         }
       } else if (selectedCell) {
         const { row, col } = selectedCell;
-        // Check if the cell is editable
         const isHeaderOrAccountingField = (row < 10 && accountingFields.includes(newGrid[row][col])) || (row === 10 && col < headers.length);
         if (!isHeaderOrAccountingField) {
           newGrid[row][col] = '';
@@ -186,18 +184,13 @@ const handleKeyDown = (e) => {
       }
       setGrid(newGrid);
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
-      // Handle copy (Ctrl+C)
-      handleCopy(); // Call the new handleCopy function
+      handleCopy();
     } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
-      // Handle paste (Ctrl+V)
-      handlePaste(e); // Call the updated handlePaste function
+      handlePaste(e);
     } else if (e.key === 'Enter') {
-      // Handle Enter key to unselect and save value
-      setEditingCell(null); // Unselect the cell
+      setEditingCell(null);
     }
   };
-  
-  
 
   // Save grid to local storage whenever it changes
   useEffect(() => {
@@ -225,18 +218,18 @@ const handleKeyDown = (e) => {
               className={`cell ${isSelected(row, col) ? 'selected' : ''} ${isHeaderOrAccountingField && cellData !== '' ? 'non-editable' : ''}`}
               onClick={(e) => handleCellClick(row, col, e)}
               onDoubleClick={() => handleCellDoubleClick(row, col)}
+              style={{ cursor: isEditable ? 'pointer' : 'not-allowed' }}
             >
-              {editingCell?.row === row && editingCell?.col === col ? (
+              {editingCell && editingCell.row === row && editingCell.col === col ? (
                 <input
                   type="text"
                   value={cellData}
                   onChange={(e) => handleChange(e, row, col)}
-                  onBlur={handleInputBlur} // Save state on blur
+                  onBlur={handleInputBlur}
                   autoFocus
-                  readOnly={!isEditable} // Make cells non-editable if they contain values in the first 10 rows
                 />
               ) : (
-                cellData
+                <span>{cellData}</span>
               )}
             </td>
           );
