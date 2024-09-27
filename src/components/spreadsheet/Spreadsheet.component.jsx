@@ -91,26 +91,61 @@ const Spreadsheet = ({ rows, columns }) => {
   };
 
   // Handle paste event
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text');
-    const rowsData = pastedData.split('\n').map(row => row.split('\t'));
-
-    const newGrid = [...grid];
-    rowsData.forEach((rowData, i) => {
-      rowData.forEach((cellData, j) => {
-        if (selectedCell) {
-          const targetRow = selectedCell.row + i;
-          const targetCol = selectedCell.col + j;
-          if (targetRow < rows && targetCol < columns) {
-
-            newGrid[targetRow][targetCol] = cellData;
-          }
-        }
-      });
-    });
-    setGrid(newGrid);
+// Handle copy event
+const handleCopy = () => {
+    if (selectedRange) {
+      const { start, end } = selectedRange;
+      const copiedRange = [];
+      
+      for (let row = Math.min(start.row, end.row); row <= Math.max(start.row, end.row); row++) {
+        copiedRange.push(grid[row].slice(Math.min(start.col, end.col), Math.max(start.col, end.col) + 1));
+      }
+  
+      const copiedText = copiedRange.map(row => row.join('\t')).join('\n');
+      navigator.clipboard.writeText(copiedText);
+    } else if (selectedCell) {
+      const cellData = grid[selectedCell.row][selectedCell.col];
+      navigator.clipboard.writeText(cellData);
+    }
   };
+  
+  // Handle paste event
+ // Handle paste event
+ const handlePaste = async (e) => {
+    e.preventDefault();
+  
+    try {
+      // Use the Clipboard API to read the clipboard data
+      const text = await navigator.clipboard.readText();
+      
+      if (!text) {
+        console.error("No data to paste from clipboard.");
+        return;
+      }
+  
+      const rowsData = text.split('\n').map(row => row.split('\t'));
+      const newGrid = [...grid];
+      
+      rowsData.forEach((rowData, i) => {
+        rowData.forEach((cellData, j) => {
+          if (selectedCell) {
+            const targetRow = selectedCell.row + i;
+            const targetCol = selectedCell.col + j;
+            if (targetRow < rows && targetCol < columns) {
+              newGrid[targetRow][targetCol] = cellData;
+            }
+          }
+        });
+      });
+      
+      setGrid(newGrid);
+    } catch (error) {
+      console.error("Failed to read clipboard data: ", error);
+    }
+  };
+  
+  
+  
 
   // Check if the cell is part of the selected range
   const isSelected = (row, col) => {
@@ -128,6 +163,7 @@ const Spreadsheet = ({ rows, columns }) => {
 // Handle key down events
 const handleKeyDown = (e) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
+      // ... existing delete logic
       const newGrid = [...grid];
       if (selectedRange) {
         const { start, end } = selectedRange;
@@ -151,18 +187,10 @@ const handleKeyDown = (e) => {
       setGrid(newGrid);
     } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
       // Handle copy (Ctrl+C)
-      if (selectedCell) {
-        const cellData = grid[selectedCell.row][selectedCell.col];
-        navigator.clipboard.writeText(cellData);
-        setCopiedContent(cellData);
-      }
+      handleCopy(); // Call the new handleCopy function
     } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       // Handle paste (Ctrl+V)
-      if (selectedCell) {
-        const newGrid = [...grid];
-        newGrid[selectedCell.row][selectedCell.col] = copiedContent;
-        setGrid(newGrid);
-      }
+      handlePaste(e); // Call the updated handlePaste function
     } else if (e.key === 'Enter') {
       // Handle Enter key to unselect and save value
       setEditingCell(null); // Unselect the cell

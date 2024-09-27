@@ -8,7 +8,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/my-accounting" element={<Spreadsheet rows={40} columns = {20}/>} />
+        <Route path="/my-accounting" element={<Spreadsheet rows={40} columns = {16}/>} />
       </Routes>
     </Router>
   );
