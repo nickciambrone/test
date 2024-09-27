@@ -2,13 +2,32 @@ import React, { useState, useEffect } from 'react';
 
 const Spreadsheet = ({ rows, columns }) => {
   const headers = ['Account', 'Entity', 'Product Group', 'Transaction Type', 'Current', 'Debit/Credit', 'Amount'];
+  const accountingFields = [
+    'Ledger',
+    'Source',
+    'Category',
+    'Currency',
+    'Accounting Date',
+    'Batch Name',
+    'Batch Description',
+    'Journal Name',
+    'Journal Description',
+  ];
 
   // Initialize the grid state
   const createInitialGrid = () => {
     const grid = new Array(rows).fill(null).map(() => new Array(columns).fill(''));
-    for (let i = 0; i < headers.length; i++) {
-      grid[0][i] = headers[i];
+    
+    // Fill accounting fields in column A (row 1 to 10)
+    for (let i = 0; i < accountingFields.length; i++) {
+      grid[i][0] = accountingFields[i]; // First column (A)
     }
+
+    // Fill header row 11
+    for (let i = 0; i < headers.length; i++) {
+      grid[10][i] = headers[i]; // Row 11
+    }
+    
     return grid;
   };
 
@@ -166,6 +185,7 @@ const Spreadsheet = ({ rows, columns }) => {
                 onChange={(e) => handleChange(e, row, col)}
                 onBlur={handleInputBlur} // Save state on blur
                 autoFocus
+                readOnly={row < 10 || (row === 10 && col < headers.length)} // Make cells in the first column (A) uneditable
               />
             ) : (
               cellData
