@@ -123,7 +123,8 @@ const Spreadsheet = ({ rows, columns }) => {
   };
 
   // Handle Delete key to clear selected cells
-  const handleKeyDown = (e) => {
+// Handle key down events
+const handleKeyDown = (e) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
       const newGrid = [...grid];
       if (selectedRange) {
@@ -150,10 +151,13 @@ const Spreadsheet = ({ rows, columns }) => {
         const newGrid = [...grid];
         newGrid[selectedCell.row][selectedCell.col] = copiedContent;
         setGrid(newGrid);
-        console.log(newGrid); // Log the grid state
       }
+    } else if (e.key === 'Enter') {
+      // Handle Enter key to unselect and save value
+      setEditingCell(null); // Unselect the cell
     }
   };
+  
 
   // Save grid to local storage whenever it changes
   useEffect(() => {
