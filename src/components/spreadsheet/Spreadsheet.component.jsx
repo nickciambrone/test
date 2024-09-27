@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const Spreadsheet = ({ rows, columns }) => {
-  const headers = ['Account', 'Entity', 'Product Group', 'Transaction Type', 'Current', 'Debit/Credit', 'Amount'];
+  const headers = ['ENT', 'ACCT', 'SUBAC', 'TT', 'PDGRP', 'CENTER', 'CP', 'LOC', 'FUTURE', 'DEBIT', 'CREDIT', 'Line Description', 'Line DFF Context', 'Line DFF', 'Captured Info Context', 'Captured Info DFF'];
   const accountingFields = [
     'Ledger',
     'Source',
@@ -73,7 +73,7 @@ const Spreadsheet = ({ rows, columns }) => {
   // Handle double-click to enter editing mode
   const handleCellDoubleClick = (row, col) => {
     // Only allow editing if it's not an accounting field or header with value
-    if (row >= 10 || (row === 10 && col > 0) || (row < 10 && col>0)) {
+    if (row >= 10 || (row === 10 && col >= 15) || (row < 10 && col>0)) {
       setEditingCell({ row, col });
     }
   };
@@ -103,6 +103,7 @@ const Spreadsheet = ({ rows, columns }) => {
           const targetRow = selectedCell.row + i;
           const targetCol = selectedCell.col + j;
           if (targetRow < rows && targetCol < columns) {
+
             newGrid[targetRow][targetCol] = cellData;
           }
         }
