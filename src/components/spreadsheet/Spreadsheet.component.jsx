@@ -12,49 +12,19 @@ const Spreadsheet = ({ rows, columns }) => {
     return grid;
   };
 
-  const [grid, setGrid] = useState(createInitialGrid());
+  // Load grid from local storage or create a new one
+  const loadGrid = () => {
+    const savedGrid = localStorage.getItem('spreadsheetGrid');
+    return savedGrid ? JSON.parse(savedGrid) : createInitialGrid();
+  };
+
+  const [grid, setGrid] = useState(loadGrid());
   const [selectedCell, setSelectedCell] = useState(null);
   const [editingCell, setEditingCell] = useState(null);
   const [selectionStart, setSelectionStart] = useState(null);
   const [selectedRange, setSelectedRange] = useState(null);
   const [selectedText, setSelectedText] = useState('');
-  const [history, setHistory] = useState([]); // Stores the grid states for undo functionality
-  const maxHistorySize = 10; // Max number of actions we can undo
-
-  // Save grid state to history
-  const saveToHistory = () => {
-    setHistory(prevHistory => {
-      const newGrid = grid.map(row => [...row]); // Deep copy each row of the grid
-      const newHistory = [...prevHistory, newGrid]; // Add the deep copied grid to history
-  
-      if (newHistory.length > maxHistorySize) {
-        newHistory.shift(); // Remove oldest if history exceeds max size
-      }
-  
-      return newHistory;
-    });
-  };
-
-  // Undo the last action
-// Undo the last action
-const undo = () => {
-    setHistory(prevHistory => {
-      if (prevHistory.length === 0) {
-        console.log('Out of Zs'); // Log when out of history
-        return prevHistory; // No history to undo
-      }
-  
-      const newHistory = [...prevHistory];
-      newHistory.pop(); // Remove the most recent history entry
-  
-      const lastState = newHistory[newHistory.length - 1] || createInitialGrid(); // Get the second most recent state or initial grid
-  
-      setGrid(lastState); // Set the grid to the second most recent state
-  
-      return newHistory; // Return the modified history without the last state
-    });
-  };
-  
+  const [copiedContent, setCopiedContent] = useState('');
 
   // Get the cell label like A1, B1, etc.
   const getCellLabel = (row, col) => {
@@ -91,18 +61,17 @@ const undo = () => {
     const newGrid = [...grid];
     newGrid[row][col] = e.target.value;
     setGrid(newGrid);
+    console.log(newGrid); // Log the grid state
   };
 
   // Handle input blur to save the state after editing
   const handleInputBlur = () => {
-    saveToHistory(); // Save state after editing
     setEditingCell(null);
   };
 
   // Handle paste event
   const handlePaste = (e) => {
     e.preventDefault();
-    saveToHistory(); // Save state before making any changes
     const pastedData = e.clipboardData.getData('text');
     const rowsData = pastedData.split('\n').map(row => row.split('\t'));
 
@@ -119,6 +88,7 @@ const undo = () => {
       });
     });
     setGrid(newGrid);
+    console.log(newGrid); // Log the grid state
   };
 
   // Check if the cell is part of the selected range
@@ -134,13 +104,7 @@ const undo = () => {
 
   // Handle Delete key to clear selected cells
   const handleKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-      // Handle Ctrl+Z or Command+Z for undo
-      e.preventDefault();
-      console.log('Undo triggered'); // Debugging: Check if undo gets triggered
-      undo();
-    } else if (e.key === 'Delete' || e.key === 'Backspace') {
-      saveToHistory(); // Save state before making any changes
+    if (e.key === 'Delete' || e.key === 'Backspace') {
       const newGrid = [...grid];
       if (selectedRange) {
         const { start, end } = selectedRange;
@@ -153,9 +117,28 @@ const undo = () => {
         newGrid[selectedCell.row][selectedCell.col] = '';
       }
       setGrid(newGrid);
+      console.log(newGrid); // Log the grid state
+    } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+      // Handle copy (Ctrl+C)
+      if (selectedCell) {
+        const cellData = grid[selectedCell.row][selectedCell.col];
+        setCopiedContent(cellData);
+      }
+    } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+      // Handle paste (Ctrl+V)
+      if (selectedCell) {
+        const newGrid = [...grid];
+        newGrid[selectedCell.row][selectedCell.col] = copiedContent;
+        setGrid(newGrid);
+        console.log(newGrid); // Log the grid state
+      }
     }
   };
-  
+
+  // Save grid to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('spreadsheetGrid', JSON.stringify(grid));
+  }, [grid]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
